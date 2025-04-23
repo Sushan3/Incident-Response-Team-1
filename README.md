@@ -312,8 +312,6 @@ MISP Installed, access here:
 User: admin@admin.test
 Password: admin
 
-![image](https://github.com/user-attachments/assets/f0338d9f-8785-4dc9-bb97-3d7e339daf99)
-
 
 ## Step 8 - Integrating MISP and thehive
 
