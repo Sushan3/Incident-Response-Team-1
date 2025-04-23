@@ -1,5 +1,51 @@
 Security Automation Incident Response Using Docker
 
+🔧 Infrastructure Overview
+Three VMs on VirtualBox:
+
+SOC VM – Hosts TheHive, MISP, and Cortex (Security tools for incident management and threat intelligence).
+
+SIEM & Log Analysis VM – Handles logging and uses Elasticsearch for log storage/analysis.
+
+Test Workstation VM – Simulates attacker/defender activities for testing the setup.
+
+Network:
+
+Uses a VirtualBox Internal NAT network.
+
+Static IPs for consistent integration between services.
+
+⚙️ Step-by-Step Setup
+Install Ubuntu VMs for SIEM and SOC with appropriate resources.
+
+Install and configure Docker on the SOC VM.
+
+Deploy TheHive, Cortex, and Elasticsearch using Docker Compose.
+
+Install MISP using its automated script.
+
+Configure Integrations:
+
+TheHive ↔ MISP: Pull threat intelligence IOCs into investigations.
+
+TheHive ↔ Cortex: Use automated analysis via Cortex responders.
+
+🔁 Automation & Workflow
+Incident is detected/logged via SIEM/log analysis.
+
+Analyst uses TheHive to open and manage the case.
+
+TheHive automatically pulls data from MISP and sends observables to Cortex for enrichment.
+
+Responses and intelligence feed back into TheHive for decision-making.
+
+🔧 Troubleshooting & Tweaks
+Downgraded from TheHive 5 → 4 and Cortex 3 → 2 due to licensing and PKI issues.
+
+Ensured persistent storage for Docker services (volumes).
+
+Fixed SSL issues when integrating MISP.
+
 
 # Virtual Machines to be Created on VirtualBox:
 >Security Operations Center (SOC) VM – Runs TheHive, MISP, Cortex
