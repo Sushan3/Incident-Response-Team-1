@@ -3,7 +3,7 @@ Security Automation Incident Response Without Using Docker
 Virtual Machines to be Created on VirtualBox:
 Ubuntu 22 VM for Cortex
 
-Ubuntu 22 VM for MISP
+Ubuntu 22.04 VM for MISP
 
 CentOS 7.9 for Hive, Elasticsearch, Cassandra
 
@@ -80,6 +80,19 @@ sudo yum update -y
 
 Step 5- Installing MISP
 sudo apt update
+
+To install MISP all you need to do is the following on a clean supported distribution.
+
+!!! notice
+
+bash
+# Please check the installer options first to make the best choice for your install
+wget --no-cache -O /tmp/INSTALL.sh https://raw.githubusercontent.com/MISP/MISP/2.4/INSTALL/INSTALL.sh
+bash /tmp/INSTALL.sh
+
+# This will install MISP Core
+wget --no-cache -O /tmp/INSTALL.sh https://raw.githubusercontent.com/MISP/MISP/2.4/INSTALL/INSTALL.sh
+bash /tmp/INSTALL.sh -c
 
 cd /opt
 
