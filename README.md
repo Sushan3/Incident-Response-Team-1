@@ -1,550 +1,314 @@
-Security Automation Incident Response Using Docker
+Security Automation Incident Response Without Using Docker
 
-🔧 Infrastructure Overview
-Three VMs on VirtualBox:
+Virtual Machines to be Created on VirtualBox:
+Ubuntu 22 VM for Cortex
 
-SOC VM – Hosts TheHive, MISP, and Cortex (Security tools for incident management and threat intelligence).
+Ubuntu 22 VM for MISP
 
-SIEM & Log Analysis VM – Handles logging and uses Elasticsearch for log storage/analysis.
+CentOS 7.9 for Hive, Elasticsearch, Cassandra
 
-Test Workstation VM – Simulates attacker/defender activities for testing the setup.
+Ubuntu 24 Desktop for Web UI Interfaces
 
-Network:
+Network Configuration:
+Bridged Network for Communication between VMs
 
-Uses a VirtualBox Internal NAT network.
+Step by Step Installation:
+Step 1- Installing Ubuntu 22 VM for Cortex
+Step2- Installing Ubuntu 22 VM for Cortex
+Step 3- Installing Cent OS 7.9 for Hive, Elasticsearch and Cassandra
+Allocate 14Gb RAM and 6CPU and enter a name for the VM
 
-Static IPs for consistent integration between services.
+Select the ISO image and skip unattended installation
 
-⚙️ Step-by-Step Setup
-Install Ubuntu VMs for SIEM and SOC with appropriate resources.
+Test this media & Install CentOs 7
 
-Install and configure Docker on the SOC VM.
+Choose Language ENglish
 
-Deploy TheHive, Cortex, and Elasticsearch using Docker Compose.
+Select automated partitioning and Done
 
-Install MISP using its automated script.
+Start Installation
 
-Configure Integrations:
+Set root password and create user
 
-TheHive ↔ MISP: Pull threat intelligence IOCs into investigations.
+Reboot the VM
 
-TheHive ↔ Cortex: Use automated analysis via Cortex responders.
+ip a
 
-🔁 Automation & Workflow
-Incident is detected/logged via SIEM/log analysis.
+sudo nano /etc/sysconfig/network-scripts/ifcfg-enp0s3
 
-Analyst uses TheHive to open and manage the case.
+sudo nano /etc/sysconfig/network-scripts/ifcfg-enp0s8
 
-TheHive automatically pulls data from MISP and sends observables to Cortex for enrichment.
+sudo mv /etc/yum.repos.d/CentOS-Base.repo/etc/yum.repos.d/CentOS-Base.repo.bak
 
-Responses and intelligence feed back into TheHive for decision-making.
+sudo vi /etc/yum.repos.d/CentOS-Base.repo:
 
-🔧 Troubleshooting & Tweaks
-Downgraded from TheHive 5 → 4 and Cortex 3 → 2 due to licensing and PKI issues.
+[base]
 
-Ensured persistent storage for Docker services (volumes).
+name=CentOS-7 - Base
 
-Fixed SSL issues when integrating MISP.
+baseurl=http://vault.centos.org/centos/7/os/x86_64/
 
+gpgcheck=1
 
-# Virtual Machines to be Created on VirtualBox:
->Security Operations Center (SOC) VM – Runs TheHive, MISP, Cortex
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
->SIEM & Log Analysis VM – Manages log collection and analysis Elasticsearch
+[updates]
 
->Test Workstation (Attacker/Defender Simulation) – Used for security testing
+name=CentOS-7 - Updates
 
-# Network Configuration:
->Create an Internal NAT Network in VirtualBox for communication between VMs
+baseurl=http://vault.centos.org/centos/7/updates/x86_64/
 
->Assign static IPs for easy integration between TheHive, MISP, Cortex, and SIEM
+gpgcheck=1
 
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
-# Step by Step Installation:
+[extras]
 
-## Step 1-Install Ubuntu VM as a SIEM machine
+name=CentOS-7 - Extras
 
->Open your VM software (e.g., VirtualBox or VMware).
+baseurl=http://vault.centos.org/centos/7/extras/x86_64/
 
->Click New to create a new VM.
+gpgcheck=1
 
->Name it Ubuntu and set the type as Linux and version as Ubuntu (64-bit).
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
->Allocate RAM (at least 4GB, recommended 8GB or more).
+sudo yum clean all
 
->Create a Virtual Hard Disk (at least 25GB, recommended 50GB).
+sudo yum makecache
 
->Once the installation is done, restart the VM.
+sudo yum update -y
 
->Log in and start using Ubuntu
+Step 5- Installing MISP
+sudo apt update
 
-## Step2- Install Ubuntu VM as a SOC (Securty Operation Center)
->Open VirtualBox and click "New".
+cd /opt
 
->Name your VM (e.g., Ubuntu-SOC).
-
->Set Type: Linux
-
->Set Version: Ubuntu (64-bit)
-
->Click Next.
-
->Memory (RAM): Set to 8GB (8192MB) (recommended for SOC operations).
-
->CPU Cores: Allocate at least 4 cores.
-
->Storage: Create a 50GB Virtual Hard Disk.
-
->Follow the on-screen installation steps:
-
->Choose Language and Keyboard Layout.
-
->Select Install Ubuntu Server.
-
->Configure Network Settings (set static IP if required).
-
->Set Hostname (e.g., soc-server).
-
->Create a user with a strong password.
-
->Install OpenSSH server (for remote access).
-
->Select "Guided - Use entire disk" for partitioning.
-
->Start installation and reboot after completion.
-
-## Step 3- Hive5 and Cortex Installation
-
->sudo apt install -y wget git python3 python3-pip openjdk-11-jre
-
->sudo apt update && sudo apt upgrade -y
-
->sudo apt install -y docker.io docker-compose
-
->sudo systemctl enable --now docker
-
-
->mkdir -p ~/thehive && cd ~/thehive
-
->sudo nano docker-compose.yml
->
->>version: '3.7'
-
->services:
-
-  elasticsearch:
-  
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
-    
-    container_name: elasticsearch
-    
-    environment:
-    
-      - discovery.type=single-node
-      
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-      
-    ports:
-    
-      - "9200:9200"
-      
-    restart: unless-stopped
-
-  thehive:
-  
-    image: strangebee/thehive:5
-    
-    container_name: thehive
-    
-    environment:
-    
-      - JAVA_OPTS=-Xms512m -Xmx1g
-      
-    depends_on:
-    
-      - elasticsearch
-      
-    ports:
-    
-      - "9000:9000"
-      
-    restart: unless-stopped
-
-  cortex:
-  
-    image: thehiveproject/cortex:latest
-    
-    container_name: cortex
-    
-    depends_on:
-    
-      - elasticsearch
-      
-    ports:
-    
-      - "9001:9001"
-      
-    restart: unless-stopped
-
-
-![hive-license](https://github.com/user-attachments/assets/bf85fb2f-2305-4ba3-984c-65eb28238c43)
-
-![new cortex and hive](https://github.com/user-attachments/assets/a72d9e52-28ea-49c0-bde1-16c74996329b)
-
-![cortex loogin](https://github.com/user-attachments/assets/d033655c-b6ac-4357-a1a6-6e0dc7bcb7b6)
-
-![cortexuser](https://github.com/user-attachments/assets/eac3b48b-ce94-4815-8ccf-140ab6a60e8e)
-
-![elastic search gui](https://github.com/user-attachments/assets/37bf04db-7215-4095-9c28-2ff79559b33e)
-
-![elastic search working 2](https://github.com/user-attachments/assets/c332a6c3-8aeb-40b9-bc4e-e021633cfbcb)
-
-
-
-
-
-## Step 5- Hive4 and Cortex Installation
-
-
->sudo apt install -y wget git python3 python3-pip openjdk-11-jre
-
->sudo apt update && sudo apt upgrade -y
-
->sudo apt install -y docker.io docker-compose
-
->sudo systemctl enable --now docker
-
-
->mkdir -p ~/thehive && cd ~/thehive
-
->sudo nano docker-compose.yml
-
-version: '3.7'
-
-services:
-
-  elasticsearch:
-  
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
-    
-    container_name: elasticsearch
-
-    environment:
-    
-      - discovery.type=single-node
-      
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-      
-    ports:
-    
-      - "9200:9200"
-      
-    restart: unless-stopped
-
- thehive:
-  
-    image: strangebee/thehive:5
-    
-    container_name: thehive
-    
-    environment:
-    
-      - JAVA_OPTS=-Xms512m -Xmx1g
-      
-    depends_on:
-    
-      - elasticsearch
-      
-    ports:
-    
-      - "9000:9000"
-      
-    restart: unless-stopped
-    
-  cortex:
-  
-    image: thehiveproject/cortex:latest
-    
-    container_name: cortex
-    
-    depends_on:
-    
-      - elasticsearch
-      
-    ports:
-    
-      - "9001:9001"
-      
-    restart: unless-stopped
-
->sudo apt install python3-pip
-
->sudo apt install python3-setuptools
-
->sudo docker-compose up -d
-
->TheHive: Open http://192.168.1.10:9000
-
->Cortex: Open http://192.168.1.10:9001
-
->docker ps
-
-hive:
-id admin@thehive.local
-pass admin
-
-hive user
-id susan@gmail.com
-pass susan
-
-
-Cortex
-id cortex
-pass cortex
-
-admin
-susan
-susan
-
-user
-rohit
-rohit
-
-![cortex loogin](https://github.com/user-attachments/assets/3435140d-26cf-4db6-91e0-a7c9ff943b65)
-
-
-
-
-## Step 6- Elastic Search Installation
-
->sudo apt update
-
->sudo apt install openjdk-11-jdk -y
-
->sudo apt install elasticsearch -y
-
->sudo systemctl start elasticsearch
-
->sudo systemctl enable elasticsearch  
-
->curl -X GET "localhost:9200/"
-
- 
-![elastic search gui](https://github.com/user-attachments/assets/5845920e-9d3b-4720-8dd6-3bc8c6ae1cd9)
-
-![elastic search working 2](https://github.com/user-attachments/assets/813321a3-4dbb-42e4-810f-688d07b09ab7)
-
-![elastic search yml file working](https://github.com/user-attachments/assets/227f38cc-91e7-4843-b6a2-5ddf40794ea4)
-
-![elastic search working](https://github.com/user-attachments/assets/1bdd97d5-6104-4797-bd85-6b28393eb7d8)
-
-## Step 7 - Installation of MISP
-
-To install MISP all you need to do is the following on a clean supported distribution.
-
-!!! notice
-
-```bash
-# Please check the installer options first to make the best choice for your install
 wget --no-cache -O /tmp/INSTALL.sh https://raw.githubusercontent.com/MISP/MISP/2.4/INSTALL/INSTALL.sh
-bash /tmp/INSTALL.sh
 
-# This will install MISP Core
-wget --no-cache -O /tmp/INSTALL.sh https://raw.githubusercontent.com/MISP/MISP/2.4/INSTALL/INSTALL.sh
-bash /tmp/INSTALL.sh -c
+bash /tmp/INSTALL.sh -A
 
-MISP Installed, access here: 
+Initial Login Credential Username: admin@admin.test Password: admin
 
-User: admin@admin.test
-Password: admin
+Step 6- Installing Cortex
+sudo apt update
 
+sudo groupadd docker
 
-## Step 8 - Integrating MISP and thehive
+sudo usermod -aG docker $USER
 
+newgrp docker
 
-## Step 9 - Integrating Cortex and thehive
+sudo chmod 777 /usr/bin/
 
-## Step 10 - Reducing the version of Cortex2
->version: '3.7'
- 
->services:
+wget -q -O /tmp/install.sh https://archives.strangebee.com/scripts/install.sh ; sudo -v ; bash /tmp/install.sh
 
-  >Elasticsearch service
+yes
 
-  >elasticsearch:
+Install cortex run neurons locally
 
-    >image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
-  
-    >container_name: elasticsearch
-  
-    >environment:
-  
-      >- discovery.type=single-node
-      
-      >- "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-      
-    >ports:
-    
-      >- "9200:9200"
-      
-    >restart: unless-stopped
-    
-    >volumes:
-    
-      >- es_data:/usr/share/elasticsearch/data
-      
-    >networks:
-    
-      >- hive_network  # Attach to custom network
- 
- > TheHive service
-  
-  >thehive:
-  
-    image: thehiveproject/thehive4
-    
-    container_name: thehive
-    
-    environment:
-    
-      - JAVA_OPTS=-Xms512m -Xmx1g
-      
-      - CORTEX_URL="http://192.168.1.10:9001"  # Correct container name for Cortex
-      
-      #- CORTEX_APIKEY="LTuoOmxx2gbqKuOm78+/snu/A0zkNRVs"
-      
-      #- CORTEX_THEHIVE_API_KEY="FpwQZcr0AIabinhzgs0szhzAvU6jtPEq"
-      
-      - MISP_URL="https://192.168.1.10"
-      
-      - MISP_APIKEY=${MISP_APIKEY}
-      
-      - MISP_CERT_IGNORE=true
-      
-    depends_on:
-    
-      - elasticsearch
-      
-      - cortex  # Ensure Cortex is started before TheHive    
-      
-    ports:
-    
-      -  "9000:9000"
-      
-    volumes:
-    
-      - thehive_data:/data
-      
-    restart: unless-stopped
-    
-    networks:
-    
-      - hive_network  # Attach to custom network
-    
- 
-  >Cortex service
-  
-  cortex:
-  
-    image: thehiveproject/cortex:2.1.3
-    
-    container_name: cortex
-    
-    environment:
-    
-      - CORTEX_THEHIVE_URL="http://192.168.1.10:9000"  # TheHive container URL
-      
-      #- CORTEX_APIKEY="LTuoOmxx2gbqKuOm78+/snu/A0zkNRVs"  # Use environment variable for the Cortex API key
-      
-      #- CORTEX_THEHIVE_API_KEY="FpwQZcr0AIabinhzgs0szhzAvU6jtPEq"  # TheHive API key for Cortex
-      
-      - CORTEX_AUTHENTICATION=Bearer  # Set authentication to Bearer token for TheHive API
-      
-    depends_on:
-    
-      - elasticsearch  # Only depend on Elasticsearch, not TheHive
-      
-    ports:
-    
-      - "9001:9001"
-      
-    restart: unless-stopped
-    
-    volumes:
-    
-      - cortex_data:/data  # Persistent storage for Cortex data
-      
-    networks:
-    
-      - hive_network  # Attach to custom network
- 
->volumes:
+Step 7 - Install Cassandra on Cent OS
+sudo yum install -y java-1.8.0-openjdk-headless.x86_64
 
-  es_data:
-  
-    driver: local  # Persist Elasticsearch data
-    
-  >thehive_data:
-  
-    driver: local  # Persist TheHive data
-    
-  cortex_data:
-  
-    driver: local  # Persist Cortex data
- 
->networks:
+echo JAVA_HOME="/var/lib/jvm/jre-1.80">> /etc/environment JAVA_HOME="/usr/lib/jvm/jre-1.8.0"
 
-  hive_network:
-  
-    driver: bridge  # Use the bridge network for communication
+rpm --import https://downloads.apache.org/cassandra/KEYS
 
+/etc/yum.repos.d/cassandra.repo
 
+[cassandra] name=Apache Cassandra
 
-# Step by Step Troubleshooting:
+baseurl=https://redhat.cassandra.apache.org/311x
 
-## 1 - Transitioning from Hive5 to Hive4
+gpgcheck=1
 
-> The reason to transition from Hive5 to Hive 4 was the drawback regarding the free version license of 14 days. Post that we again the license expires, we would not be able to work with it.
-> 
-> Hence transitioned to Hive4
-## 2 - Cortex Voumes/Database not persistent
+repo_gpgcheck=0
 
->sudo docker-compose down
->
->sudo docker volume ls
->
->sudo docker volume rm thehive_thehive_data
->
->sudo docker volume rm thehive_mongo_data
->
->sudo docker-compose up -d
->
->docker exec -it thehive /bin/bash
+gpgkey=https://downloads.apache.org/cassandra/KEYS
 
+yum clean all
 
-## 3 - SSL certificate issues MISP and hive
-![WhatsApp Image 2025-03-14 at 21 46 28](https://github.com/user-attachments/assets/c4e6a6f0-04f3-4773-8176-ef5eb667e057)
+yum makecache
 
+yum install cassandra -y -nogpgcheck
 
-## 4 - Integration between Cortex Hive and Hive MISP not working as expected with Hive 4 
+sudo nano /etc/cassandra/default.conf/cassandra.yaml
 
-## 5- Transitioning from Cortex 3 to Cortex 2 
->
->While doing some research i came accross a documentation which stated that Cortex 3 has some pki issues for authentication and hence suggested to transition to cortex 2
+cluster_name: 'thp'
 
->https://github.com/TheHive-Project/TheHive/issues/940
+seeds: "vm ip address"
 
+listening_address: vm address
 
->![image](https://github.com/user-attachments/assets/91df50ed-bfa7-483c-a2d4-d5d5aded156f)
+rpc_address: vm address
 
+rpc_port:9160
 
+sudo systemctl enable cassandra
 
+sudo systemctl restart cassandra
 
+Step 8 - Install Elasticsearch on Cent OS
+rpm --import https://artifacts.elastic.co/CPG-KEY-elasticsearch
 
+sudo nano /etc/yum.repos.d/elasticsearch.repo
 
+[elasticsearch]
 
+name=Elasticsearch repository for 7.x packages
 
+baseurl=https://artifacts.elastic.co/packages/7.x/yum
 
+gpgcheck=1
 
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
 
+enabled=0
 
+autorefresh=1
+
+type=rpm-md
+
+yum makecache
+
+sudo yum install --enablerepo=elasticsearch elasticsearch
+
+sudo yum install --enablerepo=elasticsearch elasticsearch
+
+node.name: hive-mode
+
+path.data: /var/lib/elasticsearch
+
+path.logs: /var/log/elasticsearch
+
+thread_pool.search.queue_size: 100000
+
+network.host:vm-ip
+
+http.port:9200
+
+discovery.type: single-node
+
+sudo chown -R elasticsearch:elasticsearch /etc/elasticsearch
+
+sudo chmod -R 755 /etc/elasticsearch
+
+sudo systemctl enable elasticsearch
+
+sudo systemctl restart elasticsearch
+
+Step 9 - Install Hive on Cent OS
+/etc/yum.repos.d/strangebee.repo
+
+[thehive-project] enabled=1
+
+priority=1
+
+name=Thehive-Project RPM repository
+
+baseurl=https://rpm.thehive-project.org/release/noarch
+
+gpgcheck=1
+
+yum install thehive4 --nogpgcheck
+
+yum install thehive4 --nogpgcheck
+
+chown -R /opt/thp/thehive/files
+
+sudo nano /etc/thehive/application.conf
+
+sudo systemctl enable thehive
+
+sudo systemctl restart thehive
+
+Step 10 - MISP Setup for Integration
+Create an Organization on MISP
+
+Click "administration"
+
+Click "add organization"
+
+Enter Organization details as desired
+
+Generate UID
+
+Click "Submit"
+
+Add User to Organization
+
+Click on "administration"
+
+Click "Add user"
+
+Enter User details
+
+Chose the created organization
+
+Set user role
+
+click "create"
+
+Create an Auth Key
+
+Click on "Auth Keys"
+
+Click "Add Authentication Key"
+
+Enter details and click submit.
+
+Copy the displayed authkey
+
+Click "I have noted down my key, take me back now"
+
+Step 11 - Cortex Setup for Integration
+Click "Add organization" in Cortex
+
+Enter Organization details
+
+Click on "users"
+
+Click "Add users"
+
+Enter the user details as desired
+
+Click "save user"
+
+Click "new password"
+
+Enter password
+
+press Enter
+
+Click "Create API Key"
+
+Click "reveal" to see the API Key
+
+Step 12 - Adding the API Key
+Add Cortex Integration to thehive configuration file
+
+sudo nano /etc/thehive/application.conf
+
+image
+
+image
+
+image
+
+Step 13 - Setting up Cortex Analysers
+Add the files in analysers in cortex Structure:
+
+analyzers/ └── MyAnalyzer/ ├── analyzer.json
+
+analyzer.json { "name": "MyAnalyzer", "version": "1.0", "author": "Rohit KC", "url": "https://github.com/your-repo", "description": "Example analyzer", "license": "MIT", "command": "python3 my_analyzer.py", "baseConfig": "myanalyzer.conf", "dataTypeList": ["domain", "ip", "hash", "url"] }
+
+analyzer logic: myanalyzer.py from cortexutils.analyzer import Analyzer
+
+class MyAnalyzer(Analyzer): def init(self): Analyzer.init(self)
+
+def run(self):
+    self.report({'message': f"Analyzed {self.get_data()}!"})
+if name == 'main': MyAnalyzer().run()
+
+Analyzer Configuration /etc/cortex/application.conf MyAnalyzer { apiKey = "your-api-key-if-needed" ... }
+
+to deploy the analyzer sudo /opt/cortex/bin/cortex-cli analyzer sync
