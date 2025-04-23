@@ -307,9 +307,12 @@ bash /tmp/INSTALL.sh
 wget --no-cache -O /tmp/INSTALL.sh https://raw.githubusercontent.com/MISP/MISP/2.4/INSTALL/INSTALL.sh
 bash /tmp/INSTALL.sh -c
 
-default login for MISP
-username:- admin
-paddword:- admin
+MISP Installed, access here: 
+
+User: admin@admin.test
+Password: admin
+
+![image](https://github.com/user-attachments/assets/f0338d9f-8785-4dc9-bb97-3d7e339daf99)
 
 
 ## Step 8 - Integrating MISP and thehive
