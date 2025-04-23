@@ -294,28 +294,23 @@ rohit
 
 ## Step 7 - Installation of MISP
 
->git clone https://github.com/MISP/misp-docker.git
+To install MISP all you need to do is the following on a clean supported distribution.
 
->cd misp-docker/
+!!! notice
 
->cp template.env .env
+```bash
+# Please check the installer options first to make the best choice for your install
+wget --no-cache -O /tmp/INSTALL.sh https://raw.githubusercontent.com/MISP/MISP/2.4/INSTALL/INSTALL.sh
+bash /tmp/INSTALL.sh
 
->sudo nano docker-compose.yml
+# This will install MISP Core
+wget --no-cache -O /tmp/INSTALL.sh https://raw.githubusercontent.com/MISP/MISP/2.4/INSTALL/INSTALL.sh
+bash /tmp/INSTALL.sh -c
 
->(Change start_interval to start_period) 
+default login for MISP
+username:- admin
+paddword:- admin
 
->sudo docker-compose pull
-
->sudo docker-compose up -d
-
->MISP Dashboard: https://localhost
-
-username-admin@admin.test
-pass admin
-
-rohit@gmail.com
-Pucchu456@10
-changed: Pucchu456@27
 
 ## Step 8 - Integrating MISP and thehive
 
